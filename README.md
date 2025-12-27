@@ -6,6 +6,122 @@
 
 This repository consolidates various infrastructure tools and system administration utilities, including identity management, storage solutions, and system configuration.
 
+## 🏗️ Architecture
+
+### Okta Identity Management Architecture
+
+```mermaid
+graph TB
+    subgraph "Users"
+        WEB_USER[Web Users]
+        MOBILE_USER[Mobile Users]
+        DESKTOP_USER[Desktop Users]
+    end
+    
+    subgraph "Okta Platform"
+        OKTA_IDP[Okta Identity Provider<br/>SSO Service]
+        OKTA_VERIFY[Okta Verify App<br/>MFA/Biometric]
+        OKTA_FASTPASS[Okta FastPass<br/>Windows/Mac]
+        BROWSER_PLUGIN[Browser Plugin<br/>Chrome Extension]
+    end
+    
+    subgraph "Applications"
+        SALESFORCE[Salesforce]
+        ZOOM[Zoom]
+        OFFICE365[Office 365]
+        GITHUB[GitHub]
+        DROPBOX[Dropbox]
+    end
+    
+    WEB_USER -->|Login| OKTA_IDP
+    MOBILE_USER -->|Biometric Auth| OKTA_VERIFY
+    DESKTOP_USER -->|FastPass| OKTA_FASTPASS
+    WEB_USER -->|Plugin| BROWSER_PLUGIN
+    
+    OKTA_VERIFY --> OKTA_IDP
+    OKTA_FASTPASS --> OKTA_IDP
+    BROWSER_PLUGIN --> OKTA_IDP
+    
+    OKTA_IDP -->|SSO| SALESFORCE
+    OKTA_IDP -->|SSO| ZOOM
+    OKTA_IDP -->|SSO| OFFICE365
+    OKTA_IDP -->|SSO| GITHUB
+    OKTA_IDP -->|SSO| DROPBOX
+    
+    style OKTA_IDP fill:#e1f5ff
+    style OKTA_VERIFY fill:#fff4e1
+    style OKTA_FASTPASS fill:#e8f5e9
+```
+
+### iSCSI Storage Architecture
+
+```mermaid
+graph TB
+    subgraph "Storage Server"
+        STORAGE[Dell Storage Array<br/>Dual Controller]
+        ISCSI_TARGET[iSCSI Target<br/>Port: 3260]
+        CHAP_AUTH[CHAP Authentication]
+    end
+    
+    subgraph "Client Server"
+        ISCSI_INIT[iSCSI Initiator<br/>open-iscsi]
+        MULTIPATH[Multipath Tools<br/>Dual Path Support]
+        MOUNT[File System<br/>ext4 on /kist]
+    end
+    
+    subgraph "Network"
+        NETWORK[Network<br/>TCP/IP]
+    end
+    
+    STORAGE --> ISCSI_TARGET
+    ISCSI_TARGET --> CHAP_AUTH
+    CHAP_AUTH --> NETWORK
+    NETWORK --> ISCSI_INIT
+    ISCSI_INIT --> MULTIPATH
+    MULTIPATH --> MOUNT
+    
+    ISCSI_TARGET -.->|Path 1| NETWORK
+    ISCSI_TARGET -.->|Path 2| NETWORK
+    
+    style STORAGE fill:#e1f5ff
+    style ISCSI_INIT fill:#fff4e1
+    style MULTIPATH fill:#e8f5e9
+    style MOUNT fill:#f3e5f5
+```
+
+### Multipath Configuration
+
+```mermaid
+graph LR
+    subgraph "Storage Array"
+        CTRL1[Controller 1<br/>Port 1]
+        CTRL2[Controller 2<br/>Port 2]
+    end
+    
+    subgraph "Network"
+        NET1[Network Path 1]
+        NET2[Network Path 2]
+    end
+    
+    subgraph "Server"
+        MPATH[Multipath Device<br/>/dev/mapper/mpatha]
+        PART[Partition<br/>mpatha-part1]
+        FS[File System<br/>ext4 /kist]
+    end
+    
+    CTRL1 --> NET1
+    CTRL2 --> NET2
+    NET1 --> MPATH
+    NET2 --> MPATH
+    MPATH --> PART
+    PART --> FS
+    
+    style CTRL1 fill:#e1f5ff
+    style CTRL2 fill:#e1f5ff
+    style MPATH fill:#fff4e1
+    style FS fill:#e8f5e9
+```
+
 ## 📁 Projects
 
 ### [Okta](./Okta/)
